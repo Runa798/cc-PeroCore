@@ -69,6 +69,11 @@ export const isPackaged = isElectron ? getApp().isPackaged : process.env.NODE_EN
 export const isDev = !isPackaged
 export const isPortable = isElectron && isPackaged && detectPortableMode(appExe)
 
+// 远程后端 URL (用于 WSL/Docker 开发模式)
+// 设置 PERO_BACKEND_URL=http://172.21.254.166:9120 跳过本地后端启动
+export const remoteBackendUrl = process.env.PERO_BACKEND_URL || ''
+export const isRemoteBackend = !!remoteBackendUrl
+
 /**
  * 系统默认的用户数据目录（%APPDATA%/...）。
  * 无论当前模式如何，始终指向 Windows 系统用户目录。

@@ -68,7 +68,7 @@ import { registerShortcuts } from './services/shortcuts.js'
 import axios from 'axios'
 import { spawn } from 'child_process'
 import path from 'path'
-import { isDev, paths } from './utils/env'
+import { isDev, paths, isRemoteBackend, remoteBackendUrl } from './utils/env'
 import fs from 'fs-extra'
 
 // 加载 Native 渲染核心
@@ -468,13 +468,13 @@ ipcMain.handle('emit_event', (_, { event, payload }) => {
 ipcMain.handle('chat-message', async (_, args) => {
   try {
     const token = getGatewayToken()
-    const port = 9120
+    const backendBase = isRemoteBackend ? remoteBackendUrl : 'http://localhost:9120'
     const { message } = args
 
     logger.info('Main', `IPC: 正在发送聊天消息到后端: ${message}`)
 
     await axios.post(
-      `http://localhost:${port}/api/ide/chat`,
+      `${backendBase}/api/ide/chat`,
       {
         messages: [{ role: 'user', content: message }],
         source: 'desktop',
@@ -506,15 +506,21 @@ ipcMain.handle('get_diagnostics', async () => {
 })
 
 ipcMain.handle('start_backend', async (_, args) => {
-  // Tauri invoke 将 args 作为对象传递 { enableSocialMode: true }
   const win = windowManager.launcherWin
   if (!win) return
   try {
-    // 首先启动网关
-    await startGateway()
-    // 然后启动后端
-    await startBackend(win, args?.enableSocialMode ?? false)
-    return null // Ok(())
+    if (isRemoteBackend) {
+      // 远程后端模式 (WSL/Docker): 跳过本地启动，验证连接
+      logger.info('Main', `远程后端模式: ${remoteBackendUrl}`)
+      const pingRes = await axios.get(`${remoteBackendUrl}/api/ping`, { timeout: 5000 })
+      if (pingRes.data?.status !== 'ok') throw new Error('远程后端无响应')
+      logger.info('Main', '远程后端连接成功')
+    } else {
+      // 本地模式: 启动网关和后端
+      await startGateway()
+      await startBackend(win, args?.enableSocialMode ?? false)
+    }
+    return null
   } catch (e: any) {
     throw e.message
   }
