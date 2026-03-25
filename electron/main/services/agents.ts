@@ -24,6 +24,7 @@ function getAgentOverridesDir(): string {
 export async function scanLocalAgents() {
   const root = getRootPath()
   const backendAgentsDir = path.join(root, 'backend/services/mdp/agents')
+  const userAgentsDir = path.join(root, 'backend/data/agents')
   // 全局配置已迁移到 paths.data
   const globalConfigPath = path.join(paths.data, 'agent_launch_config.json')
   // 兼容旧路径（如果 paths.data 中找不到，尝试旧位置）
@@ -71,9 +72,16 @@ export async function scanLocalAgents() {
   }
 
   const agents = []
-  const files = await fs.readdir(backendAgentsDir)
+  // 扫描内置 + 用户 Agent 目录
+  const agentDirs = [backendAgentsDir]
+  if (await fs.pathExists(userAgentsDir)) {
+    agentDirs.push(userAgentsDir)
+    logger.info('Main', `[Agents] 同时扫描用户 Agents: ${userAgentsDir}`)
+  }
+  for (const scanDir of agentDirs) {
+  const files = await fs.readdir(scanDir)
   for (const file of files) {
-    const agentDir = path.join(backendAgentsDir, file)
+    const agentDir = path.join(scanDir, file)
     try {
       const stat = await fs.stat(agentDir)
       if (stat.isDirectory()) {
@@ -144,6 +152,7 @@ export async function scanLocalAgents() {
       // 忽略访问错误
     }
   }
+  } // end for scanDir
   return agents
 }
 
