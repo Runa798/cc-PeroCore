@@ -212,19 +212,8 @@
               : 'min-height: 100%;'
           "
         >
-          <Transition name="fade-slide" mode="out-in">
-            <!-- 选项卡组件 (通过 provide/inject 传递状态) -->
-            <OverviewTab v-if="currentTab === 'overview'" key="overview" />
-            <LogsTab v-else-if="currentTab === 'logs'" key="logs" />
-            <MemoriesTab v-else-if="currentTab === 'memories'" key="memories" />
-            <TasksTab v-else-if="currentTab === 'tasks'" key="tasks" />
-            <ModelConfigTab v-else-if="currentTab === 'model_config'" key="model_config" />
-            <VoiceTab v-else-if="currentTab === 'voice_config'" key="voice_config" />
-            <McpTab v-else-if="currentTab === 'mcp_config'" key="mcp_config" />
-            <UserSettingsTab v-else-if="currentTab === 'user_settings'" key="user_settings" />
-            <ResetTab v-else-if="currentTab === 'system_reset'" key="system_reset" />
-            <NapCatTab v-else-if="currentTab === 'napcat'" key="napcat" />
-            <TerminalTab v-else-if="currentTab === 'terminal'" key="terminal" />
+          <Transition name="fade-slide">
+            <component :is="tabComponents[currentTab]" :key="currentTab" />
           </Transition>
         </div>
       </main>
@@ -867,6 +856,9 @@ import AsyncMarkdown from '../components/markdown/AsyncMarkdown.vue'
 import PButton from '../components/ui/PButton.vue'
 import PModal from '../components/ui/PModal.vue'
 import PInput from '../components/ui/PInput.vue'
+import PInputNumber from '../components/ui/PInputNumber.vue'
+import PCheckbox from '../components/ui/PCheckbox.vue'
+import PSwitch from '../components/ui/PSwitch.vue'
 import PSelect from '../components/ui/PSelect.vue'
 import PTextarea from '../components/ui/PTextarea.vue'
 import PTooltip from '../components/ui/PTooltip.vue'
@@ -887,6 +879,21 @@ import UserSettingsTab from '../components/dashboard/tabs/UserSettingsTab.vue'
 import ResetTab from '../components/dashboard/tabs/ResetTab.vue'
 import NapCatTab from '../components/dashboard/tabs/NapCatTab.vue'
 import TerminalTab from '../components/dashboard/tabs/TerminalTab.vue'
+
+// 选项卡组件映射 (用于 <component :is="..." /> 动态渲染，避免 Transition mode="out-in" + v-if 链卡死)
+const tabComponents = {
+  overview: OverviewTab,
+  logs: LogsTab,
+  memories: MemoriesTab,
+  tasks: TasksTab,
+  model_config: ModelConfigTab,
+  voice_config: VoiceTab,
+  mcp_config: McpTab,
+  user_settings: UserSettingsTab,
+  system_reset: ResetTab,
+  napcat: NapCatTab,
+  terminal: TerminalTab,
+}
 
 // 组合式函数
 import { useDashboard, API_BASE, fetchWithTimeout } from '@/composables/dashboard/useDashboard'
