@@ -2148,4 +2148,12 @@ const scrollToBottom = () => {
     transform: translateY(0);
   }
 }
+
+/* 聊天消息内容允许选中复制 */
+:deep(.whitespace-pre-wrap),
+:deep(.prose),
+:deep(.min-h-\[1\.5em\]) {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
 </style>

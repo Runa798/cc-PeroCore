@@ -128,6 +128,7 @@
       <div class="p-3 border-t-2 border-moe-cocoa/5 bg-white/20 relative flex-shrink-0">
         <div class="absolute top-[-2px] left-3 right-3 h-[2px] bg-white/50"></div>
         <button
+          v-if="isElectron()"
           class="w-full flex items-center justify-center gap-2 px-3 py-2 pixel-btn-moe-pink group"
           @click="openStronghold"
         >
@@ -199,7 +200,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { invoke } from '@/utils/ipcAdapter'
+import { invoke, isElectron } from '@/utils/ipcAdapter'
 import ChatInterface from '../components/chat/ChatInterface.vue'
 import PixelIcon from '../components/ui/PixelIcon.vue'
 import PTooltip from '../components/ui/PTooltip.vue'

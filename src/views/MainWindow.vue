@@ -2,6 +2,7 @@
   <div class="relative w-screen h-screen overflow-hidden bg-transparent">
     <!-- 自定义标题栏 (始终可见，处理拖拽和窗口控制) -->
     <CustomTitleBar
+      v-if="isElectron()"
       :is-work-mode="isWorkMode"
       :show-mode-toggle="!isWorkMode"
       :title="APP_TITLE"

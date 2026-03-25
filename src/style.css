@@ -569,6 +569,14 @@ body {
   background-color: transparent !important;
 }
 
+/* 聊天内容、markdown 渲染区域允许选中复制 */
+.prose,
+.message,
+[class*="ChatInterface"] .break-all,
+[class*="chat"] .whitespace-pre-wrap {
+  user-select: text;
+}
+
 html {
   background-color: transparent !important;
 }
