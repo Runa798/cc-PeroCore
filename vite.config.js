@@ -12,12 +12,22 @@ export default defineConfig(({ command }) => ({
     }
   },
   server: {
-    host: '127.0.0.1',
+    host: '0.0.0.0',
     port: 5173,
-    strictPort: true,
+    strictPort: false,
     hmr: {
       overlay: false
-    }
+    },
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:9120',
+        changeOrigin: true,
+      },
+      '/ws': {
+        target: 'ws://127.0.0.1:9120',
+        ws: true,
+      },
+    },
   },
   optimizeDeps: {
     include: ['vue', 'vue-router', 'echarts', 'marked', 'dompurify']

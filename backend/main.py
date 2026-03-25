@@ -856,6 +856,10 @@ app.include_router(pet_router)
 app.include_router(maintenance_router)
 app.include_router(chat_router)
 
+from routers.image_router import router as image_router
+
+app.include_router(image_router)
+
 
 dist_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dist")
 if os.path.exists(dist_path):
