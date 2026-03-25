@@ -1,0 +1,14 @@
+{
+    "character": "fern",
+    "base_tags": "1girl, fern \\(frieren\\), purple hair, long hair, purple eyes, tall, large breasts, gentle expression",
+    "sfw_outfit": "purple robe, white collar, long sleeves, hair ornament, staff",
+    "nsfw_tags": "nude, large breasts, nipples, bare shoulders, curvy, wide hips, thighs",
+    "negative_extra": "flat chest, petite",
+    "default_artist": "",
+    "scenes": {
+        "bedroom": "lying on bed, bedroom, warm lighting, pillow, looking at viewer, blush",
+        "outdoor": "meadow, flowers, wind, blue sky, standing, smiling",
+        "bath": "onsen, hot spring, steam, wet hair, wet skin, water, towel",
+        "kitchen": "kitchen, apron, cooking, warm lighting, cozy"
+    }
+}

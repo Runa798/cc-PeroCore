@@ -1,0 +1,15 @@
+{
+    "character": "frieren",
+    "base_tags": "1girl, frieren, silver hair, long hair, twintails, green eyes, elf, pointy ears, petite, flat chest, stoic expression",
+    "sfw_outfit": "white robe, long sleeves, purple capelet, staff, hair ornament",
+    "nsfw_tags": "nude, small breasts, nipples, bare shoulders, collarbone, navel, slim waist",
+    "negative_extra": "large breasts, huge breasts",
+    "default_artist": "",
+    "scenes": {
+        "bedroom": "lying on bed, bedroom, dim lighting, pillow, sheets, looking at viewer",
+        "outdoor": "meadow, flowers, wind, blue sky, sunlight, standing",
+        "bath": "onsen, hot spring, steam, wet hair, wet skin, water, relaxed",
+        "study": "library, books, desk, candle, reading, sitting",
+        "combat": "magic circle, glowing, casting spell, dynamic pose, energy, dramatic lighting"
+    }
+}

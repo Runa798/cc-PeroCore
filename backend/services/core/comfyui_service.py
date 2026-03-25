@@ -1,7 +1,7 @@
 """ComfyUI image generation service for PeroCore.
 
 Connects to a ComfyUI instance via HTTP API to generate images
-using the Anima anime model. Supports SFW/NSFW content.
+using the Anima anime model. Supports text2img and img2img, SFW/NSFW.
 """
 
 import asyncio
@@ -23,6 +23,7 @@ _WORKFLOWS = {
     "enhanced": _WORKFLOW_DIR / "anima_enhanced_api.json",
     "basic": _WORKFLOW_DIR / "anima_basic_api.json",
     "turbo": _WORKFLOW_DIR / "anima_turbo_api.json",
+    "i2i_enhanced": _WORKFLOW_DIR / "anima_i2i_enhanced_api.json",
 }
 
 # Default negative prompt
@@ -121,6 +122,87 @@ class ComfyUIService:
             }
         except Exception as e:
             logger.error("[ComfyUI] Generation failed: %s", e)
+            return None
+
+    async def img2img(
+        self,
+        reference_base64: str,
+        positive: str,
+        negative: str = _DEFAULT_NEGATIVE,
+        denoise: float = 0.5,
+        steps: int = 30,
+        cfg: float = 4.5,
+        seed: Optional[int] = None,
+        nsfw: bool = False,
+        timeout: float = 120.0,
+    ) -> Optional[Dict[str, Any]]:
+        """Image-to-image: generate a variation from a reference image.
+
+        Args:
+            reference_base64: Base64-encoded reference image (PNG/JPG).
+            positive: Positive prompt.
+            denoise: Denoising strength (0.0 = identical, 1.0 = full regen).
+                     0.3-0.5 recommended for character variations.
+            Other args: same as generate().
+
+        Returns:
+            Dict with image_base64, seed, prompt on success; None on failure.
+        """
+        workflow = self._load_workflow("i2i_enhanced")
+        if seed is None:
+            seed = random.randint(0, 2**53)
+
+        # Upload reference image to ComfyUI
+        ref_filename = await self._upload_image(reference_base64)
+        if not ref_filename:
+            logger.error("[ComfyUI] Failed to upload reference image")
+            return None
+
+        quality = "masterpiece, best quality, score_9, score_8, absurdres, "
+        if nsfw:
+            quality += "nsfw, explicit, "
+        full_positive = quality + positive
+
+        workflow["4"]["inputs"]["text"] = full_positive
+        workflow["5"]["inputs"]["text"] = negative
+        workflow["7"]["inputs"]["seed"] = seed
+        workflow["7"]["inputs"]["steps"] = steps
+        workflow["7"]["inputs"]["cfg"] = cfg
+        workflow["7"]["inputs"]["denoise"] = denoise
+        workflow["12"]["inputs"]["image"] = ref_filename
+
+        logger.info("[ComfyUI] img2img: denoise=%.2f, seed=%d", denoise, seed)
+
+        try:
+            prompt_id = await self._queue_prompt(workflow)
+            if not prompt_id:
+                return None
+            image_data = await self._wait_and_fetch(prompt_id, timeout)
+            if not image_data:
+                return None
+            return {
+                "image_base64": base64.b64encode(image_data).decode("ascii"),
+                "seed": seed,
+                "prompt": full_positive,
+                "denoise": denoise,
+            }
+        except Exception as e:
+            logger.error("[ComfyUI] img2img failed: %s", e)
+            return None
+
+    async def _upload_image(self, image_base64: str) -> Optional[str]:
+        """Upload a base64 image to ComfyUI's input folder. Returns filename."""
+        image_bytes = base64.b64decode(image_base64)
+        filename = f"pero_ref_{uuid.uuid4().hex[:8]}.png"
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.post(
+                f"{self.base_url}/upload/image",
+                files={"image": (filename, image_bytes, "image/png")},
+                data={"overwrite": "true"},
+            )
+            if resp.status_code == 200:
+                return resp.json().get("name", filename)
+            logger.error("[ComfyUI] Upload failed: %d %s", resp.status_code, resp.text[:200])
             return None
 
     async def _queue_prompt(self, workflow: Dict) -> Optional[str]:
