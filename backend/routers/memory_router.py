@@ -75,7 +75,11 @@ async def get_chat_history(
     # 若未提供agent_id则默认为"pero"（兼容性考虑）。
     # Dashboard通常查看特定代理。
 
-    target_agent = agent_id if agent_id else "pero"
+    # 若未提供 agent_id，使用当前活跃 agent
+    if not agent_id:
+        from services.agent.agent_manager import get_agent_manager
+        agent_id = get_agent_manager().active_agent_id or "pero"
+    target_agent = agent_id
     logs = await service.query_logs(
         session,
         source,

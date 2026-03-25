@@ -1944,6 +1944,17 @@ watch(
 )
 
 watch(
+  () => props.targetId,
+  () => {
+    // Agent 切换时清空消息并重新加载历史
+    messages.value = []
+    offset.value = 0
+    hasMore.value = true
+    fetchHistory()
+  }
+)
+
+watch(
   () => props.mode,
   () => {
     stopGroupPolling()
@@ -2056,7 +2067,7 @@ const sendMessage = async () => {
       body: JSON.stringify({
         messages: apiMessages,
         source: props.workMode ? 'ide' : 'desktop',
-        session_id: props.workMode ? 'current_work_session' : props.targetId || 'default'
+        session_id: props.workMode ? 'current_work_session' : 'default'
       })
     })
 
