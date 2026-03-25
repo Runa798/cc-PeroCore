@@ -79,7 +79,15 @@ export const invoke = async (cmd: string, args?: any) => {
   }
 
   if (cmd === 'get-platform') {
-    return 'web' // 或者 'docker'
+    return 'web'
+  }
+
+  if (cmd === 'get_config') {
+    return { onboarding_completed: true }
+  }
+
+  if (cmd === 'get_app_version') {
+    return '0.8.3-web'
   }
 
   // 浏览器模式 (HTTP Bridge)

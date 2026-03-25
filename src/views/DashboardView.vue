@@ -848,8 +848,9 @@
       </div>
     </PModal>
 
-    <!-- 引导图层喵~ 🎭 -->
+    <!-- 引导图层喵~ 🎭 (浏览器模式下禁用，避免遮挡) -->
     <OnboardingOverlay
+      v-if="showOnboarding && !!window.electron"
       v-model:is-visible="showOnboarding"
       type="dashboard"
       @finish="handleOnboardingFinish"
@@ -1511,7 +1512,9 @@ onMounted(async () => {
   try {
     const config = await invoke('get_config')
     appConfig.value = config
-    if (config.onboarding_completed !== true) showOnboarding.value = true
+    if (config.onboarding_completed !== true && window.electron) {
+      showOnboarding.value = true
+    }
   } catch (e) {
     console.error('加载配置失败:', e)
   }
