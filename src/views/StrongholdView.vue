@@ -357,7 +357,7 @@
                       v-if="agent.avatar"
                       :src="
                         agent.avatar.startsWith('/')
-                          ? `http://localhost:9120${agent.avatar}`
+                          ? `${API_HOST}${agent.avatar}`
                           : agent.avatar
                       "
                       class="w-full h-full object-cover"
@@ -418,7 +418,7 @@
                     v-if="agent.avatar"
                     :src="
                       agent.avatar.startsWith('/')
-                        ? `http://localhost:9120${agent.avatar}`
+                        ? `${API_HOST}${agent.avatar}`
                         : agent.avatar
                     "
                     class="w-full h-full object-cover"
@@ -593,6 +593,7 @@
 import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { useStronghold } from '../composables/useStronghold'
 import { isElectron } from '@/utils/ipcAdapter'
+import { API_HOST } from '@/config'
 import ChatInterface from '../components/chat/ChatInterface.vue'
 import CustomTitleBar from '../components/layout/CustomTitleBar.vue'
 import PixelIcon from '../components/ui/PixelIcon.vue'

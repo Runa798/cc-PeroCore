@@ -197,9 +197,8 @@ const handleDialogCancel = () => {
   dialog.visible = false
 }
 
-// 动态获取后端基础 URL 喵~ 🌸
-const BACKEND_HOST = (window.location.hostname || 'localhost')
-const API_BASE = window.location.protocol + '//' + BACKEND_HOST + ':9120/api/ide'
+import { API_BASE as _API_BASE } from '@/config'
+const API_BASE = `${_API_BASE}/ide`
 
 const fetchFiles = async (path = null) => {
   try {

@@ -729,7 +729,6 @@ const stopCurrentTask = async () => {
   if (!isThinking.value) return
 
   try {
-    const API_BASE = 'http://localhost:9120/api'
     const res = await fetch(`${API_BASE}/task/voice_session/stop`, { method: 'POST' })
     if (res.ok) {
       console.log('[Pet3DView] 任务中断请求已发送')
@@ -1090,7 +1089,6 @@ onMounted(async () => {
   // 初始获取 Pet 状态 (与后端同步)
   const fetchPetState = async () => {
     try {
-      const API_BASE = 'http://localhost:9120/api'
       const res = await fetch(`${API_BASE}/pet/state`)
       if (res.ok) {
         const state = await res.json()

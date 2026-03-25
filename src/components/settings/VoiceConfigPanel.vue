@@ -632,7 +632,7 @@ import PSelect from '../ui/PSelect.vue'
 import PTextarea from '../ui/PTextarea.vue'
 import PTooltip from '../ui/PTooltip.vue'
 
-const API_BASE = 'http://localhost:9120/api'
+import { API_BASE } from '@/config'
 const activeTab = ref('stt')
 const configs = ref([])
 const showEditor = ref(false)

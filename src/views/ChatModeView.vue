@@ -204,7 +204,7 @@ import ChatInterface from '../components/chat/ChatInterface.vue'
 import PixelIcon from '../components/ui/PixelIcon.vue'
 import PTooltip from '../components/ui/PTooltip.vue'
 
-const API_BASE = window.electron ? 'http://localhost:9120' : ''
+import { API_HOST as API_BASE } from '@/config'
 
 // 状态
 const agents = ref([])

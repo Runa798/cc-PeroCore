@@ -72,7 +72,7 @@
 
 <script setup>
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { AGENT_NAME } from '../../config'
+import { AGENT_NAME, API_BASE } from '../../config'
 
 const props = defineProps({
   segments: {
@@ -107,7 +107,7 @@ watch(
 const checkTaskStatus = async () => {
   if (!props.isLive) return
   try {
-    const res = await fetch(`http://localhost:9120/api/task/default/status`)
+    const res = await fetch(`${API_BASE}/task/default/status`)
     if (res.ok) {
       const data = await res.json()
       isTaskPaused.value = data.status === 'paused'
@@ -132,7 +132,7 @@ onUnmounted(() => {
 const toggleTaskPause = async () => {
   const action = isTaskPaused.value ? 'resume' : 'pause'
   try {
-    const res = await fetch(`http://localhost:9120/api/task/default/${action}`, { method: 'POST' })
+    const res = await fetch(`${API_BASE}/task/default/${action}`, { method: 'POST' })
     if (res.ok) {
       isTaskPaused.value = !isTaskPaused.value
     }
@@ -146,7 +146,7 @@ const sendInjection = async () => {
 
   isSendingInjection.value = true
   try {
-    const res = await fetch(`http://localhost:9120/api/task/default/inject`, {
+    const res = await fetch(`${API_BASE}/task/default/inject`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ instruction: injectionInput.value })

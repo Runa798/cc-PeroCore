@@ -11,7 +11,7 @@ const logToMain = (msg: string, ...args: any[]) => {
 
 export class GatewayClient {
   private ws: WebSocket | null = null
-  private url: string = 'ws://localhost:9120/ws/gateway'
+  private url: string = `${(window as any).electron ? 'ws://localhost:9120' : (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host}/ws/gateway`
   private reconnectInterval: number = 3000
   private heartbeatInterval: any = null
   private deviceId: string = 'electron-client-' + Math.random().toString(36).substr(2, 9)

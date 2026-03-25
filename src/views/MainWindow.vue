@@ -57,8 +57,7 @@ const showErrorDialog = ref(false)
 const isSessionReady = ref(false)
 const errorMessage = ref('')
 
-// 动态获取后端基础 URL 喵~ 🌸
-const API_BASE = window.electron ? 'http://localhost:9120' : ''
+import { API_HOST as API_BASE } from '@/config'
 
 // 在 Electron 中，窗口管理通过 IPC 由主进程处理
 // 主进程 (windows/manager.ts) 应该处理 'close' 事件以隐藏窗口

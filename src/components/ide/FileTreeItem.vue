@@ -58,6 +58,7 @@
 <script setup>
 import { ref } from 'vue'
 import PixelIcon from '../ui/PixelIcon.vue'
+import { API_BASE } from '@/config'
 
 const props = defineProps({
   item: { type: Object, default: () => ({}) },
@@ -78,7 +79,7 @@ const toggle = async () => {
       loading.value = true
       try {
         const res = await fetch(
-          `http://localhost:9120/api/ide/files?path=${encodeURIComponent(props.item.path)}`
+          `${API_BASE}/ide/files?path=${encodeURIComponent(props.item.path)}`
         )
         if (res.ok) {
           children.value = await res.json()

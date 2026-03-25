@@ -908,7 +908,7 @@ import CustomDialog from '../ui/CustomDialog.vue'
 import { AGENT_NAME, AGENT_AVATAR_TEXT } from '../../config'
 import { gatewayClient } from '../../api/gateway'
 
-const API_BASE = window.electron ? 'http://localhost:9120' : ''
+import { API_HOST as API_BASE } from '@/config'
 
 const props = defineProps({
   workMode: Boolean,

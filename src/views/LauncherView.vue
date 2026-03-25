@@ -1921,7 +1921,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
-import { AGENT_NAME, APP_TITLE } from '../config'
+import { AGENT_NAME, APP_TITLE, API_HOST } from '../config'
 import CustomTitleBar from '../components/layout/CustomTitleBar.vue'
 import PTooltip from '../components/ui/PTooltip.vue'
 import { invoke, listen, isElectron } from '@/utils/ipcAdapter'
@@ -2470,7 +2470,7 @@ const fetchAgents = async () => {
       avatarUrl: agent.avatar
         ? agent.avatar.startsWith('data:')
           ? agent.avatar
-          : `http://localhost:9120${agent.avatar}`
+          : `${API_HOST}${agent.avatar}`
         : null
     }))
   } catch (e) {

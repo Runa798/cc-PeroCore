@@ -15,7 +15,7 @@ import type {
 } from './types'
 
 // ─── API 基础地址 ──────────────────────────────────────────────────────────────
-export const API_BASE: string = (window as any).electron ? 'http://localhost:9120/api' : '/api'
+export { API_BASE } from '@/config'
 
 // ─── 带超时的 fetch 包装 ─────────────────────────────────────────────────────
 export const fetchWithTimeout = async (
