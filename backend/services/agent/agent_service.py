@@ -216,14 +216,18 @@ class AgentService:
 
         print(f"[Agent] 通过预处理器构建 Prompt。消息数: {len(final_messages)}")
 
-        # ── NSFW 自动路由：claude_code 不支持 NSFW，自动切到 fallback 模型 ──
+        # ── NSFW 检测 + 自动路由 ──
         effective_config = dict(config)
-        if effective_config.get("provider") == "claude_code" and is_nsfw(final_messages):
-            fallback = await self._get_nsfw_fallback_config()
-            if fallback:
-                print(f"[Agent] NSFW 检测命中，自动切换: claude_code → {fallback['provider']}:{fallback['model']}")
-                effective_config.update(fallback)
-                self._inject_nsfw_corpus(final_messages)
+        if is_nsfw(final_messages):
+            if effective_config.get("provider") == "claude_code":
+                # Claude 不支持 NSFW，切到 fallback 模型
+                fallback = await self._get_nsfw_fallback_config()
+                if fallback:
+                    print(f"[Agent] NSFW 检测命中，自动切换: claude_code → {fallback['provider']}:{fallback['model']}")
+                    effective_config.update(fallback)
+            # 无论哪个 provider，只要检测到 NSFW 就注入语料库覆盖人格限制
+            print("[Agent] NSFW 检测命中，注入语料库")
+            self._inject_nsfw_corpus(final_messages)
 
         llm = LLMService(
             api_key=effective_config.get("api_key"),
