@@ -15,6 +15,7 @@ from database import get_session
 from models import AIModelConfig, Config
 from peroproto import perolink_pb2
 from services.core.gateway_client import gateway_client
+from services.core.gateway_hub import gateway_hub
 from services.interaction.tts_service import get_tts_service
 from services.perception.asr_service import get_asr_service
 
@@ -116,7 +117,7 @@ class RealtimeSessionManager:
         for k, v in message.items():
             envelope.request.params[k] = str(v)
 
-        await gateway_client.send(envelope)
+        await gateway_hub.broadcast_envelope(envelope)
 
     async def broadcast(self, message: dict):
         """[已弃用] 将旧版广播调用转发到网关"""
@@ -143,7 +144,7 @@ class RealtimeSessionManager:
             envelope.stream.is_end = True
             envelope.stream.content_type = "audio/mp3"  # 或基于文件的 wav
 
-            await gateway_client.send(envelope)
+            await gateway_hub.broadcast_envelope(envelope)
         except Exception as e:
             logger.error(f"通过网关发送音频流失败: {e}")
 
