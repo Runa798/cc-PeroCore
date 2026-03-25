@@ -75,25 +75,32 @@ class MDPManager:
         # 使用 FileSystemLoader 以支持加载外部 Agent 目录
         loaders = [jinja2.DictLoader(prompts_content_map)]
 
-        # 尝试加载内部 Agent 目录 (现在位于 mdp/agents)
+        # 尝试加载 Agent 目录 (内置: mdp/agents, 用户: data/agents)
         try:
             # prompt_dir = .../backend/services/mdp/prompts
             # mdp_dir = .../backend/services/mdp
             mdp_dir = os.path.dirname(os.path.abspath(self.prompt_dir))
             agents_dir = os.path.join(mdp_dir, "agents")
+            # 用户自定义 agent 目录: backend/data/agents
+            # mdp_dir = .../backend/services/mdp → 需要上两级到 backend/
+            backend_dir = os.path.dirname(os.path.dirname(mdp_dir))
+            user_agents_dir = os.path.join(backend_dir, "data", "agents")
 
-            if os.path.exists(agents_dir):
-                loaders.append(jinja2.FileSystemLoader(agents_dir))
-                logger.info(f"MDP: 已添加 Agent 目录到加载路径: {agents_dir}")
+            for adir in [agents_dir, user_agents_dir]:
+                if os.path.exists(adir):
+                    loaders.append(jinja2.FileSystemLoader(adir))
+                    logger.info(f"MDP: 已添加 Agent 目录到加载路径: {adir}")
 
-                # 同时扫描 agents 目录下的 .md 文件并加入 prompts_content_map
-                # 这样可以直接通过 key 访问，而不只是通过 FileSystemLoader
-                for root, _, files in os.walk(agents_dir):
+            # 扫描所有 agent 目录下的 .md 文件并加入 prompts_content_map
+            for agents_scan_dir in [agents_dir, user_agents_dir]:
+              if not os.path.exists(agents_scan_dir):
+                continue
+              for root, _, files in os.walk(agents_scan_dir):
                     for file in files:
                         if file.endswith(".md"):
                             file_path = os.path.join(root, file)
                             try:
-                                rel_path = os.path.relpath(file_path, agents_dir)
+                                rel_path = os.path.relpath(file_path, agents_scan_dir)
                                 rel_path = rel_path.replace("\\", "/")
                                 # 为了避免冲突，可以给 agent 的 prompt 加个前缀，或者直接用路径
                                 # 例如 pero/system_prompt
