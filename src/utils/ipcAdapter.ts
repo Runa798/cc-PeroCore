@@ -104,6 +104,7 @@ export const invoke = async (cmd: string, args?: any) => {
     }
 
     const data = await response.json()
+    if (data == null) return null
     if (data.error) {
       throw new Error(data.error)
     }

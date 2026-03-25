@@ -204,7 +204,7 @@ import ChatInterface from '../components/chat/ChatInterface.vue'
 import PixelIcon from '../components/ui/PixelIcon.vue'
 import PTooltip from '../components/ui/PTooltip.vue'
 
-const API_BASE = 'http://localhost:9120'
+const API_BASE = window.electron ? 'http://localhost:9120' : ''
 
 // 状态
 const agents = ref([])
@@ -295,7 +295,7 @@ onMounted(() => {
   loadAgents()
   initParticles()
   console.log('聊天模式已挂载')
-  window.ipcRenderer.send('resize-window', { width: 400, height: 600 })
+  window.ipcRenderer?.send('resize-window', { width: 400, height: 600 })
 })
 
 onUnmounted(() => {

@@ -27,6 +27,10 @@ export default defineConfig(({ command }) => ({
         target: 'ws://127.0.0.1:9120',
         ws: true,
       },
+      '/assets': {
+        target: 'http://127.0.0.1:9120',
+        changeOrigin: true,
+      },
     },
   },
   optimizeDeps: {
