@@ -43,6 +43,7 @@ class AgentConfigLoader:
             "api_base": global_api_base
             or configs.get("ppc.apiBase", "https://api.openai.com"),
             "model": configs.get("ppc.modelName", "gpt-3.5-turbo"),
+            "provider": configs.get("global_llm_provider", "openai"),
             "temperature": 0.7,
             "enable_vision": False,
         }

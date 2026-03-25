@@ -133,7 +133,7 @@ class ReActLoop:
                             full_response_text += content
                             yield content
 
-                        if "tool_calls" in delta:
+                        if delta.get("tool_calls"):
                             has_tool_calls_in_this_turn = True
                             for tc_delta in delta["tool_calls"]:
                                 idx = tc_delta.get("index", 0)

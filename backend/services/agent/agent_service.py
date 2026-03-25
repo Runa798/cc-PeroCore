@@ -41,6 +41,7 @@ from services.agent._tool_executor import AgentToolExecutor
 from services.agent._tool_policy import ToolPolicyEngine
 from services.agent.task_manager import task_manager
 from services.core.llm_service import LLMService
+from services.core.nsfw_detector import is_nsfw
 from services.core.session_service import set_current_session_context
 from services.memory.memory_service import MemoryService
 from services.memory.scorer_service import ScorerService
@@ -82,6 +83,10 @@ class AgentService:
         self.post_handler = AgentPostHandler(
             session, self.memory_service, self.postprocessor_manager
         )
+
+    async def _get_llm_config(self) -> Dict[str, Any]:
+        """兼容方法：供外部代码（预处理器等）通过 agent_service 获取 LLM 配置。"""
+        return await self.config_loader.get_llm_config()
 
     # ─────────────────────────────────────────────
     # 主入口
@@ -127,6 +132,12 @@ class AgentService:
 
         # ── 1. 加载 LLM 配置 ──
         config = await self.config_loader.get_llm_config()
+
+        # ── 1.5 /model 命令：手动切换模型 ──
+        model_switch_reply = await self._handle_model_command(messages, config)
+        if model_switch_reply is not None:
+            yield model_switch_reply
+            return
 
         # ── 2. 加载 MCP 客户端 ──
         if on_status:
@@ -205,11 +216,19 @@ class AgentService:
 
         print(f"[Agent] 通过预处理器构建 Prompt。消息数: {len(final_messages)}")
 
+        # ── NSFW 自动路由：claude_code 不支持 NSFW，自动切到 fallback 模型 ──
+        effective_config = dict(config)
+        if effective_config.get("provider") == "claude_code" and is_nsfw(final_messages):
+            fallback = await self._get_nsfw_fallback_config()
+            if fallback:
+                print(f"[Agent] NSFW 检测命中，自动切换: claude_code → {fallback['provider']}:{fallback['model']}")
+                effective_config.update(fallback)
+
         llm = LLMService(
-            api_key=config.get("api_key"),
-            api_base=config.get("api_base"),
-            model=config.get("model"),
-            provider=config.get("provider", "openai"),
+            api_key=effective_config.get("api_key"),
+            api_base=effective_config.get("api_base"),
+            model=effective_config.get("model"),
+            provider=effective_config.get("provider", "openai"),
         )
 
         pair_id = str(uuid.uuid4())
@@ -561,3 +580,98 @@ class AgentService:
             return cfg.value.lower() == "true" if cfg else False
         except Exception:
             return False
+
+    async def _handle_model_command(
+        self, messages: List[Dict[str, Any]], config: Dict[str, Any]
+    ) -> Optional[str]:
+        """处理 /model 聊天命令。返回回复文本或 None（非命令）。
+
+        支持:
+          /model              — 列出可用模型
+          /model <name>       — 切换到指定模型（持久写入 current_model_id）
+        """
+        import re
+
+        last_text = ""
+        for msg in reversed(messages):
+            if msg.get("role") != "user":
+                continue
+            c = msg.get("content", "")
+            last_text = c if isinstance(c, str) else ""
+            break
+
+        last_text = last_text.strip()
+        if not last_text.startswith("/model"):
+            return None
+
+        from models import AIModelConfig, Config
+
+        # /model (no args) → list
+        match = re.match(r"^/model\s*$", last_text)
+        if match:
+            rows = (await self.session.exec(select(AIModelConfig))).all()
+            if not rows:
+                return "没有配置任何模型。"
+            lines = ["**可用模型：**"]
+            current_provider = config.get("provider", "?")
+            current_model = config.get("model", "?")
+            for r in rows:
+                marker = " ← 当前" if (r.provider == current_provider and r.model_id == current_model) else ""
+                lines.append(f"- `{r.name}` ({r.provider}:{r.model_id}){marker}")
+            return "\n".join(lines)
+
+        # /model <name> → switch
+        match = re.match(r"^/model\s+(.+)$", last_text, re.I)
+        if not match:
+            return None
+
+        query = match.group(1).strip().lower()
+        rows = (await self.session.exec(select(AIModelConfig))).all()
+        target = None
+        for r in rows:
+            if query in r.name.lower() or query in (r.model_id or "").lower():
+                target = r
+                break
+
+        if not target:
+            names = ", ".join(f"`{r.name}`" for r in rows)
+            return f"未找到匹配模型 `{query}`。可用: {names}"
+
+        # 持久写入 current_model_id
+        cfg = (
+            await self.session.exec(
+                select(Config).where(Config.key == "current_model_id")
+            )
+        ).first()
+        if cfg:
+            cfg.value = str(target.id)
+        else:
+            self.session.add(Config(key="current_model_id", value=str(target.id)))
+        await self.session.commit()
+
+        return f"已切换到 **{target.name}** (`{target.provider}:{target.model_id}`)"
+
+    async def _get_nsfw_fallback_config(self) -> Optional[Dict[str, Any]]:
+        """读取 NSFW 回退模型配置。返回 dict(api_key, api_base, model, provider) 或 None。"""
+        try:
+            from models import AIModelConfig, Config
+
+            cfg = (
+                await self.session.exec(
+                    select(Config).where(Config.key == "nsfw_fallback_model_id")
+                )
+            ).first()
+            if not cfg:
+                return None
+            model = await self.session.get(AIModelConfig, int(cfg.value))
+            if not model:
+                return None
+            return {
+                "api_key": model.api_key or "",
+                "api_base": model.api_base or "",
+                "model": model.model_id or "",
+                "provider": model.provider or "openai",
+            }
+        except Exception as e:
+            print(f"[Agent] NSFW fallback 配置读取失败: {e}")
+            return None

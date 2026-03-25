@@ -10,6 +10,7 @@ from google.genai import types
 
 from services.core.gateway_client import gateway_client
 from services.core.moderation_service import moderation_service
+from services.core.claude_code_provider import chat_claude_code, chat_claude_code_stream
 
 # 默认 API Base URL 配置 (用户未提供时使用)
 DEFAULT_API_BASES = {
@@ -95,6 +96,10 @@ class LLMService:
         response_format: Optional[Dict] = None,
         timeout: float = 300.0,
     ) -> Dict[str, Any]:
+        # Claude Code CLI (本地子进程，完整 shell 权限)
+        if self.provider == "claude_code":
+            return await chat_claude_code(messages, temperature, tools, model=self.model)
+
         # 智能纠错：若模型为 Gemini 但 Provider 误设为 Anthropic，强制回退到 OpenAI 兼容模式
         if self.provider in ["claude", "anthropic"] and "gemini" in self.model.lower():
             print(
@@ -738,7 +743,13 @@ class LLMService:
         if not api_base and provider in DEFAULT_API_BASES:
             api_base = DEFAULT_API_BASES[provider]
 
-        if provider == "gemini":
+        if provider == "claude_code":
+            async for delta in chat_claude_code_stream(
+                messages, temperature, tools, model=model_id
+            ):
+                yield delta
+            return
+        elif provider == "gemini":
             async for delta in self._chat_gemini_stream(
                 messages, temperature, model_id, api_key, tools
             ):
